@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Ultimate Dex</title>
+<style>
+:root { 
+    --scarlet: #ff2424; 
+    --violet: #8c47ff; 
+    --dark: #1a1a1a;
+    --menu-bright: #ff3e3e;
+    --menu-red: #e3350d; 
+    --menu-dark-red: #a12308;
+    --menu-deep: #6b0f00;
+    --accent: #3c5aa6;
+}
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    transition: background 0.8s ease; 
+    margin: 0; padding: 0; color: #334155; 
+    min-height: 100vh; 
+    background: linear-gradient(135deg, var(--menu-bright) 0%, var(--menu-red) 35%, var(--menu-dark-red) 70%, var(--menu-deep) 100%); 
+    -webkit-tap-highlight-color: transparent;
+}
+body.theme-sv { background: linear-gradient(135deg, var(--scarlet) 0%, var(--violet) 100%); }
+
+.container { max-width: 1100px; margin: auto; padding: 10px; box-sizing: border-box; }
+
+#search-section { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+.search-box-container { background: rgba(255, 255, 255, 0.95); padding: 30px 20px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; width: 90%; max-width: 600px; }
+
+.dex-title { margin:0 0 20px 0; background: linear-gradient(90deg, #3c5aa6, #ffcb05); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: clamp(24px, 8vw, 38px); font-weight: 900; cursor: pointer; }
+
+.main-nav { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.search-wrapper { position: relative; width: 100%; display: flex; gap: 8px; }
+.nav-input { flex-grow: 1; padding: 15px; border: 3px solid #e2e8f0; border-radius: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
+.search-btn { background: var(--accent); color: white; border: none; border-radius: 15px; padding: 0 20px; font-weight: 800; cursor: pointer; }
+
+.suggestions { position: absolute; top: 105%; left: 0; right: 0; background: white; border-radius: 12px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow-y: auto; max-height: 250px; text-align: left; }
+.list-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; font-size: 16px; }
+
+#display-card { background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: none; margin-top: 10px; margin-bottom: 20px; }
+
+.form-btn { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; cursor: pointer; font-weight: 700; color: #64748b; font-size: 13px; }
+.form-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+.header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; position: sticky; top: 0; background: rgba(255,255,255,0.9); padding: 10px 0; z-index: 10; }
+
+.layout-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+
+@media (max-width: 850px) {
+    .layout-grid { grid-template-columns: 1fr; }
+    .header-flex { flex-wrap: wrap; justify-content: center; }
+    .back-btn { order: 1; }
+    .shiny-btn { order: 2; }
+    #pokeImg { width: 220px !important; }
+}
+
+.back-btn { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; color: #64748b; }
+.v-toggle { font-size: 12px; padding: 10px 15px; border-radius: 20px; border: 2px solid #e2e8f0; background: white; font-weight: 900; white-space: nowrap; }
+.v-toggle.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.stat-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 900; }
+.stat-bar-bg { flex-grow: 1; background: #e2e8f0; height: 12px; border-radius: 6px; margin: 0 10px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+
+.type-badge { padding: 6px 12px; border-radius: 8px; color: white; font-size: 11px; font-weight: 800; text-transform: uppercase; margin: 4px; display: inline-block; }
+.shiny-btn { font-size: 28px; background: none; border: none; filter: grayscale(1); padding: 5px; }
+.shiny-btn.active { filter: grayscale(0) drop-shadow(0 0 10px #ffcb05); }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
+th { padding: 12px 8px; background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0; }
+td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; }
+
+#movesBody td:nth-child(2) { font-variant: small-caps; font-weight: 900; }
+
+.cat-icon { width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 8px; position: relative; top: -1px; }
+.cat-physical { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 11px solid #ef4444; }
+.cat-special { background-color: #3b82f6; border-radius: 50%; width: 11px; height: 11px; }
+.cat-status { border: 2px solid #94a3b8; border-radius: 50%; width: 10px; height: 10px; box-sizing: border-box; }
+
+.evo-stage-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.evo-item { 
+    text-align: center; 
+    text-transform: small-caps; 
+    cursor: pointer; 
+    padding: 5px; 
+    border-radius: 10px; 
+}
+.evo-img { width: 70px; height: 70px; }
+#evoChain { display: flex; justify-content: center; align-items: center; min-height: 80px; text-align: center; }
+
+.list-item.active {
+    display: block !important;
+    width: 100% !important;
+    background-color: #64748b !important;
+    color: white !important;
+    padding: 15px 20px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+}
+
+body { font-family: sans-serif; background:#f0f0f0; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="search-section">
+        <div class="search-box-container">
+            <h1 class="dex-title" onclick="location.reload()">Pokémon Ultimate Dex</h1>
+            <div class="main-nav">
+                <div class="search-wrapper">
+                    <input type="text" id="pokeIn" class="nav-input" placeholder="Name or ID..." autocomplete="off">
+                    <button class="search-btn" id="goBtn">GO</button>
+                    <div id="pokeSuggs" class="suggestions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="display-card">
+        <div id="formsArea" style="background: #f8fafc; padding: 15px; border-radius: 18px; margin-bottom: 20px; border: 1px solid #e2e8f0; display: none;">
+            <span style="font-size:11px; font-weight:900; color:#94a3b8; display: block; margin-bottom: 12px; letter-spacing: 1px;">AVAILABLE VARIANTS</span>
+            <div id="formsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+
+        <div class="header-flex">
+            <button class="back-btn" onclick="goBack()">← BACK</button>
+            <div class="game-switcher">
+                <button id="btn-sv" 
+        class="game-btn active" 
+        style="background: linear-gradient(to right, var(--scarlet), var(--violet)); 
+               border-radius: 50px; 
+               border: none; 
+               padding: 10px 20px; 
+               color: white; 
+               cursor: pointer; 
+               font-weight: bold;" 
+        onclick="setGame('sv', this)">
+    S / V
+</button>
+            </div>
+            <button id="shinySparkle" class="shiny-btn" onclick="toggleShiny()">✨</button>
+        </div>
+
+        <div class="layout-grid">
+            <div style="text-align: center; position: relative;">
+                <div id="dexNumber" style="font-weight: 900; color: #94a3b8; font-size: 20px;">#0000</div>
+                <img id="pokeImg" src="" style="width: 250px; max-width: 90%; height: auto; display:block; margin: auto;">
+                
+                <div id="nav-pokes" style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                    <!-- JS pondrá los botones -->
+                </div>
+                
+                <div id="pokeTypes" style="margin-top: 10px;"></div>
+                <div id="stats-area" style="margin-top: 20px; text-align: left; background: #f8fafc; padding: 15px; border-radius: 12px;"></div>
+            </div>
+            
+            <div>
+                <h2 id="pokeName" style="margin: 0; font-size: 32px; text-transform: capitalize;"></h2>
+                <div id="pCat" style="color: #64748b; font-weight: bold; font-size: 14px; margin-bottom: 15px;"></div>
+                
+                <div style="background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:20px;">
+                    <span style="font-size:10px; font-weight:900; color:#64748b">EVOLUTION CHAIN</span>
+                    <div id="evoChain" style="display:flex; overflow-x: auto; gap:15px; margin-top:10px; align-items: center; padding-bottom: 10px; scrollbar-width: thin;"></div>
+                </div>
+
+                <div id="abilitiesArea" style="font-size: 14px; line-height: 1.4;"></div>
+
+                <div style="margin-top:25px;">
+                    <div style="display:flex; gap:8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none;">
+                        <button class="v-toggle" onclick="setMoveMode('level-up', this)">Level</button>
+                        <button class="v-toggle" onclick="setMoveMode('machine', this)">TM</button>
+                        <button class="v-toggle" onclick="setMoveMode('egg', this)">Egg</button>
+                        <button class="v-toggle active" onclick="setMoveMode('all', this)">All</button>
+                    </div>
+                    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #f1f5f9;">
+                        <table>
+                            <thead><tr><th>Lvl</th><th>Move</th><th>Type</th><th>Pwr</th></tr></thead>
+                            <tbody id="movesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="display-card"></div>
+
+<script>
+let allPokes = [], currentPoke = null, isShiny = false, activeVer = 'scarlet', activeGame = 'sv', moveMode = 'level-up', activeForm = null;
+
+const typeColors = { 
+    grass: '#7AC74C', fire: '#EE8130', water: '#6390F0', bug: '#A6B91A', normal: '#A8A77A', poison: '#A33EA1', 
+    electric: '#F7D02C', ground: '#E2BF65', fairy: '#D685AD', fighting: '#C22E28', psychic: '#F95587', rock: '#B6A136', 
+    ghost: '#735797', ice: '#96D9D6', dragon: '#6F35FC', dark: '#705746', steel: '#B7B7CE', flying: '#A98FF3' 
+};
+
+const cap = s => s.replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+
+function getStatColor(v) {
+    if(v < 50) return '#ff4d4d';
+    if(v < 80) return '#ff944d';
+    if(v < 100) return '#ffdb4d';
+    if(v < 120) return '#52be80';
+    if(v < 150) return '#5dade2';
+    return '#af7ac5';
+}
+
+window.onload = async () => {
+    const data = await (await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1025')).json();
+    allPokes = data.results.map((p, i) => ({ name: p.name, id: i + 1 }));
+    setupSearch('pokeIn', 'pokeSuggs', allPokes, loadPokemon);
+};
+
+function goBack() {
+    document.getElementById('display-card').style.display = 'none';
+    document.getElementById('search-section').style.display = 'flex';
+    document.body.className = '';
+    window.scrollTo(0,0);
+}
+
+function setupSearch(id, sugId, list, cb) {
+    const inp = document.getElementById(id),
+          sug = document.getElementById(sugId),
+          goBtn = document.getElementById('goBtn');
+    let currentFocus = -1;
+
+    const processSearch = () => {
+        const val = inp.value.toLowerCase().trim();
+        if(val) { cb(val); closeSuggs(); }
+    };
+
+    goBtn.onclick = processSearch;
+
+    inp.oninput = () => {
+        const val = inp.value.toLowerCase();
+        sug.innerHTML = "";
+        currentFocus = -1;
+        if(!val) { sug.style.display = "none"; return; }
+
+        const matches = list.filter(p => p.name.includes(val) || (p.id && p.id.toString() === val)).slice(0,10);
+        sug.style.display = matches.length ? "block" : "none";
+
+        matches.forEach((m) => {
+            const d = document.createElement('div');
+            d.className = "list-item";
+            d.innerHTML = `<span class="search-id" style="color:#94a3b8; font-weight:bold; margin-right:10px;">#${m.id}</span>${cap(m.name)}`;
+            d.addEventListener("click", () => { cb(m.name); closeSuggs(); });
+            sug.appendChild(d);
+        });
+
+        const items = sug.getElementsByClassName("list-item");
+        if(items.length) {
+            currentFocus = 0;
+            addActive(items);
+        }
+    };
+
+    inp.onkeydown = (e) => {
+        const items = sug.getElementsByClassName("list-item");
+        if(!items.length) return;
+
+        if(e.key === "ArrowDown") {
+            currentFocus++;
+            if(currentFocus >= items.length) currentFocus = 0;
+            addActive(items);
+            e.preventDefault();
+        } else if(e.key === "ArrowUp") {
+            currentFocus--;
+            if(currentFocus < 0) currentFocus = items.length - 1;
+            addActive(items);
+            e.preventDefault();
+        } else if(e.key === "Enter") {
+            e.preventDefault();
+            if(currentFocus > -1 && items[currentFocus]) {
+                const name = items[currentFocus].textContent.replace(/^#\d+\s*/, '').toLowerCase();
+                cb(name);
+                closeSuggs();
+            } else {
+                processSearch();
+            }
+        }
+    };
+
+    function addActive(items) {
+        Array.from(items).forEach(i => i.classList.remove("active"));
+        if(currentFocus >= 0 && currentFocus < items.length) {
+            items[currentFocus].classList.add("active");
+            items[currentFocus].scrollIntoView({ block: "nearest" });
+        }
+    }
+
+    function closeSuggs() {
+        sug.style.display = "none";
+        document.getElementById('search-section').style.display = 'none';
+        inp.value = "";
+        document.getElementById('display-card').style.display = 'block';
+    }
+}
+
+async function loadPokemon(idOrName) {
+    try {
+        // Carga la forma específica
+        const poke = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName}`)).json();
+
+        // Carga la especie y evolución
+        const species = await (await fetch(poke.species.url)).json();
+        const evo = await (await fetch(species.evolution_chain.url)).json();
+
+        currentPoke = { species, poke, evo };
+
+        document.getElementById('display-card').style.display = 'block';
+        render(); // pinta todo
+        window.scrollTo(0,0);
+    } catch(e) {
+        alert("Error loading Pokémon. Please try again.");
+    }
+}
+
+
+const statMap = {
+    hp: 'HP',
+    attack: 'ATK',
+    defense: 'DEF',
+    'special-attack': 'SPA',
+    'special-defense': 'SPD',
+    speed: 'SPE'
+};
+
+async function render() {
+    const { species, poke, evo } = currentPoke;
+    document.getElementById('pokeName').innerText = cap(poke.name);
+    document.getElementById('dexNumber').innerText = `#${species.id.toString().padStart(4, '0')}`;
+    document.getElementById('pokeImg').src = isShiny 
+        ? (poke.sprites.other.home.front_shiny || poke.sprites.front_shiny) 
+        : (poke.sprites.other.home.front_default || poke.sprites.front_default);
+    document.getElementById('pokeTypes').innerHTML = poke.types.map(t => `<span class="type-badge" style="background:${typeColors[t.type.name]}">${t.type.name}</span>`).join('');
+    document.getElementById('pCat').innerText = species.genera.find(g => g.language.name==='en')?.genus || "";
+
+    let stats = "";
+    poke.stats.forEach(s => {
+        stats += `<div class="stat-row">
+                    <div style="width:35px">${statMap[s.stat.name]}</div>
+                    <div style="width:35px; text-align:right">${s.base_stat}</div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" style="width:${(s.base_stat/255)*100}%; background:${getStatColor(s.base_stat)}"></div>
+                    </div>
+                  </div>`;
+    });
+    document.getElementById('stats-area').innerHTML = stats;
+
+    let absHtml = "";
+    for(let a of poke.abilities) {
+        const d = await (await fetch(a.ability.url)).json();
+        const entry = d.effect_entries.find(e => e.language.name==='en');
+        absHtml += `<div style="margin-bottom:12px">
+                        <strong>${cap(a.ability.name).toUpperCase()}</strong>${a.is_hidden ? ' (HA)' : ''}: 
+                        <span style="color:#64748b">${entry ? entry.short_effect : "No info."}</span>
+                    </div>`;
+    }
+    document.getElementById('abilitiesArea').innerHTML = absHtml;
+
+    renderEvoChain(evo.chain);
+    renderForms(species.varieties);
+    updateEntry();
+    renderMoves();
+}
+
+const verColors = {
+    'scarlet': 'var(--scarlet)',
+    'violet': 'var(--violet)',
+    'sword': 'cyan',
+    'shield': 'magenta',
+    'legends-arceus': '#FFD700'
+};
+
+async function renderEvoChain(chain) {
+    const container = document.getElementById('evoChain');
+    container.innerHTML = "";
+
+    async function createNode(node) {
+        const speciesData = await (await fetch(node.species.url)).json();
+
+        // Todas las variedades de esta especie
+        const speciesVarieties = await Promise.all(speciesData.varieties.map(async v => {
+            const pokeData = await (await fetch(v.pokemon.url)).json();
+            const spriteUrl = isShiny
+                ? (pokeData.sprites.other.home.front_shiny || pokeData.sprites.front_shiny)
+                : (pokeData.sprites.other.home.front_default || pokeData.sprites.front_default);
+            return { name: pokeData.name, sprite: spriteUrl };
+        }));
+
+        // Nodo principal vertical
+        const nodeDiv = document.createElement('div');
+        nodeDiv.style.display = 'flex';
+        nodeDiv.style.flexDirection = 'column';
+        nodeDiv.style.alignItems = 'center';
+        nodeDiv.style.margin = '0 10px';
+
+        // Añadimos todas las variedades de la especie
+        const speciesDiv = document.createElement('div');
+        speciesDiv.style.display = 'flex';
+        speciesDiv.style.flexWrap = 'wrap';  // permite varias filas si hay muchos
+        speciesDiv.style.justifyContent = 'center';
+        speciesDiv.style.gap = '8px';
+        speciesDiv.style.maxWidth = '200px'; // evita descuadre en evoluciones largas
+
+        speciesVarieties.forEach(s => {
+            const evoItem = document.createElement('div');
+            evoItem.className = 'evo-item';
+            evoItem.style.textAlign = 'center';
+            evoItem.style.cursor = 'pointer';
+            evoItem.onclick = () => loadPokemon(s.name);
+            evoItem.innerHTML = `
+                <img src="${s.sprite}" class="evo-img" style="width:50px; height:50px; border:1px solid #000; border-radius:6px;">
+                <div style="font-size:10px; font-weight:900; text-transform:capitalize;">${s.name.replace(/-/g,' ')}</div>
+            `;
+            speciesDiv.appendChild(evoItem);
+        });
+
+        nodeDiv.appendChild(speciesDiv);
+
+        // Si hay evoluciones, las ponemos debajo con una flecha
+        if(node.evolves_to && node.evolves_to.length) {
+            const arrowDiv = document.createElement('div');
+            arrowDiv.innerHTML = '<span style="font-weight:bold; color:#cbd5e1; font-size:14px;">↓</span>';
+            arrowDiv.style.margin = '4px 0';
+            nodeDiv.appendChild(arrowDiv);
+
+            // Contenedor horizontal para evoluciones
+            const evolutionsDiv = document.createElement('div');
+            evolutionsDiv.style.display = 'flex';
+            evolutionsDiv.style.flexWrap = 'wrap'; // permite varias filas
+            evolutionsDiv.style.justifyContent = 'center';
+            evolutionsDiv.style.gap = '10px';
+            evolutionsDiv.style.maxWidth = '400px'; // ajusta según necesidad
+
+            for(let evoBranch of node.evolves_to) {
+                const childNode = await createNode(evoBranch);
+                evolutionsDiv.appendChild(childNode);
+            }
+
+            nodeDiv.appendChild(evolutionsDiv);
+        }
+
+        return nodeDiv;
+    }
+
+    const rootNode = await createNode(chain);
+    container.appendChild(rootNode);
+
+    if(container.innerHTML.trim() === "") {
+        container.innerHTML = `<div style="color:#64748b; font-weight:900; font-size:12px; text-align:center;">Doesn't evolve</div>`;
+    }
+}
+
+
+function renderForms() {
+    const forms = currentPoke.species.varieties; // todas las formas de la especie
+    const area = document.getElementById('formsArea');
+    const list = document.getElementById('formsList');
+
+    if (forms.length <= 1) {
+        area.style.display = 'none';
+        return;
+    }
+
+    area.style.display = 'block';
+    list.innerHTML = '';
+
+    forms.forEach(f => {
+        const btn = document.createElement('button');
+        btn.classList.add('form-btn'); // asegura que tenga estilo
+
+        // Texto: Base o nombre de la variante
+        btn.textContent = f.is_default ? 'Base' : f.pokemon.name.replace(currentPoke.species.name + '-', '').replace(/-/g,' ').toUpperCase();
+
+        // Marca el botón activo
+        if (f.pokemon.name === currentPoke.poke.name) btn.classList.add('active');
+
+        // Al hacer click, carga esa forma
+        btn.onclick = () => loadPokemon(f.pokemon.name);
+
+        list.appendChild(btn);
+    });
+}
+
+
+function isSpecialVariety(name) {
+    const special = ['tauros', 'darmanitan']; 
+    return special.some(p => name.startsWith(p));
+}
+
+async function loadForm(name) {
+    currentPoke.poke = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)).json();
+    render();
+}
+
+function setGame(g, btn) {
+    activeGame = g; 
+    document.body.className = `theme-${g}`;
+    document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active')); 
+    btn.classList.add('active');
+    activeVer = g === 'sv' ? 'scarlet' : g === 'ss' ? 'sword' : 'legends-arceus';
+    updateEntry(); 
+    renderMoves();
+}
+
+
+async function renderMoves() {
+    const body = document.getElementById('movesBody'); 
+    body.innerHTML = "<tr><td colspan='4'>Loading moves...</td></tr>";
+
+    // Determina el grupo de versión según el juego activo
+    const vGroup = activeGame === 'sv' ? 'scarlet-violet' 
+                 : activeGame === 'ss' ? 'sword-shield' 
+                 : 'legends-arceus';
+
+    // Filtra los movimientos según version_group y método de aprendizaje
+    let moves = currentPoke.poke.moves.filter(m => 
+        m.version_group_details.some(d => 
+            d.version_group.name === vGroup && 
+            (moveMode === 'all' || d.move_learn_method.name === moveMode)
+        )
+    );
+
+    // Ordena los movimientos por nivel si corresponde
+    if(moveMode === 'level-up' || moveMode === 'all') {
+        moves.sort((a,b) => {
+            const aDetail = a.version_group_details.find(d => d.version_group.name === vGroup);
+            const bDetail = b.version_group_details.find(d => d.version_group.name === vGroup);
+            const aLvl = (aDetail?.move_learn_method.name === 'level-up') ? aDetail.level_learned_at : Infinity;
+            const bLvl = (bDetail?.move_learn_method.name === 'level-up') ? bDetail.level_learned_at : Infinity;
+            return aLvl - bLvl;
+        });
+    }
+
+    let moveData = [];
+    const seenMoves = new Set();
+
+    for(let m of moves) {
+        try {
+            const moveInfo = await (await fetch(m.move.url)).json();
+            const detail = m.version_group_details.find(d => d.version_group.name === vGroup);
+            if(!detail) continue;
+
+            // Evita duplicados: mismo nombre + método
+            const key = m.move.name + '-' + detail.move_learn_method.name;
+            if(seenMoves.has(key)) continue;
+            seenMoves.add(key);
+
+            // Nivel que se aprende (solo level-up)
+            let lvlText = '-';
+            if((moveMode === 'level-up' || moveMode === 'all') && detail.move_learn_method.name === 'level-up') {
+                lvlText = detail.level_learned_at || '-';
+            }
+
+            moveData.push(`<tr>
+                <td>${lvlText}</td>
+                <td><span class="cat-icon cat-${moveInfo.damage_class.name}"></span>${cap(moveInfo.name)}</td>
+                <td><span class="type-badge" style="background:${typeColors[moveInfo.type.name]}; padding:3px 6px; font-size:9px;">${moveInfo.type.name}</span></td>
+                <td>${moveInfo.power || '-'}</td>
+            </tr>`);
+
+        } catch(err) {
+            console.warn("Error cargando movimiento:", m.move.name, err);
+        }
+    }
+
+    body.innerHTML = moveData.join('') || "<tr><td colspan='4'>No moves found.</td></tr>";
+}
+
+
+function setMoveMode(m, btn) { 
+    moveMode = m; 
+    document.querySelectorAll('.v-toggle').forEach(b => b.classList.remove('active')); 
+    btn.classList.add('active'); 
+    renderMoves(); 
+}
+
+function toggleShiny() { 
+    isShiny = !isShiny; 
+    document.getElementById('shinySparkle').classList.toggle('active', isShiny); 
+    render(); 
+}
+
+
+console.log('JS cargado');
+</script>
+</body>
+</html>
