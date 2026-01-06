@@ -460,11 +460,13 @@ async function renderEvoChain(chain) {
 
 
 function renderForms() {
-    const forms = currentPoke.species.varieties; // todas las formas de la especie
+    const forms = currentPoke.species.varieties;
     const area = document.getElementById('formsArea');
     const list = document.getElementById('formsList');
 
-    if (forms.length <= 1) {
+    const baseForms = forms.filter(f => f.is_default || isSpecialVariety(f.pokemon.name));
+
+    if(forms.length <= 1) {
         area.style.display = 'none';
         return;
     }
@@ -474,21 +476,16 @@ function renderForms() {
 
     forms.forEach(f => {
         const btn = document.createElement('button');
-        btn.classList.add('form-btn'); // asegura que tenga estilo
+        btn.classList.add('form-btn');
 
-        // Texto: Base o nombre de la variante
-        btn.textContent = f.is_default ? 'Base' : f.pokemon.name.replace(currentPoke.species.name + '-', '').replace(/-/g,' ').toUpperCase();
+        let text = f.is_default ? 'Base' : f.pokemon.name.replace(currentPoke.species.name + '-', '').replace(/-/g,' ').toUpperCase();
+        btn.textContent = text;
 
-        // Marca el botón activo
-        if (f.pokemon.name === currentPoke.poke.name) btn.classList.add('active');
-
-        // Al hacer click, carga esa forma
+        if(f.pokemon.name === currentPoke.poke.name) btn.classList.add('active');
         btn.onclick = () => loadPokemon(f.pokemon.name);
-
         list.appendChild(btn);
     });
 }
-
 
 function isSpecialVariety(name) {
     const special = ['tauros', 'darmanitan']; 
@@ -512,63 +509,49 @@ function setGame(g, btn) {
 
 
 async function renderMoves() {
-    const body = document.getElementById('movesBody'); 
+    const body = document.getElementById('movesBody');
     body.innerHTML = "<tr><td colspan='4'>Loading moves...</td></tr>";
 
-    // Determina el grupo de versión según el juego activo
     const vGroup = activeGame === 'sv' ? 'scarlet-violet' 
                  : activeGame === 'ss' ? 'sword-shield' 
                  : 'legends-arceus';
 
-    // Filtra los movimientos según version_group y método de aprendizaje
     let moves = currentPoke.poke.moves.filter(m => 
-        m.version_group_details.some(d => 
-            d.version_group.name === vGroup && 
-            (moveMode === 'all' || d.move_learn_method.name === moveMode)
-        )
+        m.version_group_details.some(d => d.version_group.name === vGroup 
+            && (moveMode === 'all' || d.move_learn_method.name === moveMode))
     );
 
-    // Ordena los movimientos por nivel si corresponde
     if(moveMode === 'level-up' || moveMode === 'all') {
         moves.sort((a,b) => {
             const aDetail = a.version_group_details.find(d => d.version_group.name === vGroup);
             const bDetail = b.version_group_details.find(d => d.version_group.name === vGroup);
-            const aLvl = (aDetail?.move_learn_method.name === 'level-up') ? aDetail.level_learned_at : Infinity;
-            const bLvl = (bDetail?.move_learn_method.name === 'level-up') ? bDetail.level_learned_at : Infinity;
-            return aLvl - bLvl;
+            const aLevel = aDetail.move_learn_method.name === 'level-up' ? aDetail.level_learned_at : Infinity;
+            const bLevel = bDetail.move_learn_method.name === 'level-up' ? bDetail.level_learned_at : Infinity;
+            return aLevel - bLevel;
         });
     }
 
-    let moveData = [];
+    const moveData = [];
     const seenMoves = new Set();
 
-    for(let m of moves) {
-        try {
-            const moveInfo = await (await fetch(m.move.url)).json();
-            const detail = m.version_group_details.find(d => d.version_group.name === vGroup);
-            if(!detail) continue;
+    for(const m of moves) {
+        const d = await (await fetch(m.move.url)).json();
+        const detail = m.version_group_details.find(v => v.version_group.name === vGroup);
+        const moveKey = m.move.name + '-' + detail.move_learn_method.name;
+        if(seenMoves.has(moveKey)) continue;
+        seenMoves.add(moveKey);
 
-            // Evita duplicados: mismo nombre + método
-            const key = m.move.name + '-' + detail.move_learn_method.name;
-            if(seenMoves.has(key)) continue;
-            seenMoves.add(key);
-
-            // Nivel que se aprende (solo level-up)
-            let lvlText = '-';
-            if((moveMode === 'level-up' || moveMode === 'all') && detail.move_learn_method.name === 'level-up') {
-                lvlText = detail.level_learned_at || '-';
-            }
-
-            moveData.push(`<tr>
-                <td>${lvlText}</td>
-                <td><span class="cat-icon cat-${moveInfo.damage_class.name}"></span>${cap(moveInfo.name)}</td>
-                <td><span class="type-badge" style="background:${typeColors[moveInfo.type.name]}; padding:3px 6px; font-size:9px;">${moveInfo.type.name}</span></td>
-                <td>${moveInfo.power || '-'}</td>
-            </tr>`);
-
-        } catch(err) {
-            console.warn("Error cargando movimiento:", m.move.name, err);
+        let lvlText = '-';
+        if(moveMode === 'level-up' && detail.move_learn_method.name === 'level-up') {
+            lvlText = detail.level_learned_at || '-';
         }
+
+        moveData.push(`<tr>
+            <td>${lvlText}</td>
+            <td><span class="cat-icon cat-${d.damage_class.name}"></span>${cap(d.name)}</td>
+            <td><span class="type-badge" style="background:${typeColors[d.type.name]}; padding: 3px 6px; font-size:9px;">${d.type.name}</span></td>
+            <td>${d.power || '-'}</td>
+        </tr>`);
     }
 
     body.innerHTML = moveData.join('') || "<tr><td colspan='4'>No moves found.</td></tr>";
