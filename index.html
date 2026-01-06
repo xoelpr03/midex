@@ -1,109 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokémon Ultimate Dex</title>
-<style>
-:root { 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Ultimate Dex</title>
+    <style>
+        :root { 
     --scarlet: #ff2424; 
     --violet: #8c47ff; 
-    --dark: #1a1a1a;
-    --menu-bright: #ff3e3e;
-    --menu-red: #e3350d; 
-    --menu-dark-red: #a12308;
-    --menu-deep: #6b0f00;
     --accent: #3c5aa6;
-}
+    /* Minimalist Silver Theme */
+    --silver-light: #f8fafc;
+    --silver-mid: #e2e8f0;
+    --silver-dark: #94a3b8;
+        }
 
-body { 
+        body { 
     font-family: 'Inter', sans-serif; 
-    transition: background 0.8s ease; 
-    margin: 0; padding: 0; color: #334155; 
+    margin: 0; padding: 0; 
+    color: #1e293b; 
     min-height: 100vh; 
-    background: linear-gradient(135deg, var(--menu-bright) 0%, var(--menu-red) 35%, var(--menu-dark-red) 70%, var(--menu-deep) 100%); 
-    -webkit-tap-highlight-color: transparent;
+    /* Soft white/silver gradient */
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%); 
+    background-attachment: fixed;
+        }
+        body.theme-sv { background: linear-gradient(135deg, var(--scarlet) 0%, var(--violet) 100%); }
+
+        .container { max-width: 1100px; margin: auto; padding: 10px; box-sizing: border-box; }
+
+        #search-section { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+       .search-box-container { 
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px); /* Glassmorphism effect */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 30px 20px; 
+    border-radius: 30px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+    text-align: center; 
+    width: 90%; 
+    max-width: 600px; 
 }
-body.theme-sv { background: linear-gradient(135deg, var(--scarlet) 0%, var(--violet) 100%); }
+        .dex-title { margin:0 0 20px 0; background: linear-gradient(90deg, #3c5aa6, #ffcb05); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: clamp(24px, 8vw, 38px); font-weight: 900; cursor: pointer; }
 
-.container { max-width: 1100px; margin: auto; padding: 10px; box-sizing: border-box; }
+        .main-nav { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .search-wrapper { position: relative; width: 100%; display: flex; gap: 8px; }
+        .nav-input { flex-grow: 1; padding: 15px; border: 3px solid #e2e8f0; border-radius: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
+        .search-btn { background: var(--accent); color: white; border: none; border-radius: 15px; padding: 0 20px; font-weight: 800; cursor: pointer; }
 
-#search-section { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-.search-box-container { background: rgba(255, 255, 255, 0.95); padding: 30px 20px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; width: 90%; max-width: 600px; }
+        .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow-y: auto; max-height: 250px; font-size: 16px; width: 100%; }
+        .list-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
 
-.dex-title { margin:0 0 20px 0; background: linear-gradient(90deg, #3c5aa6, #ffcb05); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: clamp(24px, 8vw, 38px); font-weight: 900; cursor: pointer; }
+        .list-item:hover {
+            background-color: #e2e8f0;
+        }
 
-.main-nav { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-.search-wrapper { position: relative; width: 100%; display: flex; gap: 8px; }
-.nav-input { flex-grow: 1; padding: 15px; border: 3px solid #e2e8f0; border-radius: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
-.search-btn { background: var(--accent); color: white; border: none; border-radius: 15px; padding: 0 20px; font-weight: 800; cursor: pointer; }
-
-.suggestions { position: absolute; top: 105%; left: 0; right: 0; background: white; border-radius: 12px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow-y: auto; max-height: 250px; text-align: left; }
-.list-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; font-size: 16px; }
-
-#display-card { background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: none; margin-top: 10px; margin-bottom: 20px; }
-
-.form-btn { padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; cursor: pointer; font-weight: 700; color: #64748b; font-size: 13px; }
-.form-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
-
-.header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; position: sticky; top: 0; background: rgba(255,255,255,0.9); padding: 10px 0; z-index: 10; }
-
-.layout-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
-
-@media (max-width: 850px) {
-    .layout-grid { grid-template-columns: 1fr; }
-    .header-flex { flex-wrap: wrap; justify-content: center; }
-    .back-btn { order: 1; }
-    .shiny-btn { order: 2; }
-    #pokeImg { width: 220px !important; }
+#display-card { 
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 24px; 
+    padding: 20px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+    border: 1px solid white;
+    margin-top: 10px; 
+    margin-bottom: 20px;
 }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; position: sticky; top: 0; background: rgba(255,255,255,0.9); padding: 10px 0; z-index: 10; }
 
-.back-btn { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; color: #64748b; }
-.v-toggle { font-size: 12px; padding: 10px 15px; border-radius: 20px; border: 2px solid #e2e8f0; background: white; font-weight: 900; white-space: nowrap; }
-.v-toggle.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .layout-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
 
-.stat-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 900; }
-.stat-bar-bg { flex-grow: 1; background: #e2e8f0; height: 12px; border-radius: 6px; margin: 0 10px; overflow: hidden; }
-.stat-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+        @media (max-width: 850px) {
+            .layout-grid { grid-template-columns: 1fr; }
+            .header-flex { flex-wrap: wrap; justify-content: center; }
+            .back-btn { order: 1; }
+            .shiny-btn { order: 2; }
+            #pokeImg { width: 220px !important; }
+        }
 
-.type-badge { padding: 6px 12px; border-radius: 8px; color: white; font-size: 11px; font-weight: 800; text-transform: uppercase; margin: 4px; display: inline-block; }
-.shiny-btn { font-size: 28px; background: none; border: none; filter: grayscale(1); padding: 5px; }
-.shiny-btn.active { filter: grayscale(0) drop-shadow(0 0 10px #ffcb05); }
+        .back-btn { background: #f1f5f9; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; color: #64748b; }
+        .v-toggle { font-size: 12px; padding: 10px 15px; border-radius: 20px; border: 2px solid #e2e8f0; background: white; font-weight: 900; white-space: nowrap; }
+        .v-toggle.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
-th { padding: 12px 8px; background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0; }
-td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; }
+        .stat-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 900; }
+        .stat-bar-bg { flex-grow: 1; background: #e2e8f0; height: 12px; border-radius: 6px; margin: 0 10px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
 
-#movesBody td:nth-child(2) { font-variant: small-caps; font-weight: 900; }
+        .type-badge { padding: 6px 12px; border-radius: 8px; color: white; font-size: 11px; font-weight: 800; text-transform: uppercase; margin: 4px; display: inline-block; }
+        .shiny-btn { font-size: 28px; background: none; border: none; filter: grayscale(1); padding: 5px; }
+        .shiny-btn.active { filter: grayscale(0) drop-shadow(0 0 10px #ffcb05); }
 
-.cat-icon { width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 8px; position: relative; top: -1px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
+       th { 
+    background: transparent;
+    color: var(--silver-dark);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 10px;
+}
+        td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-transform: capitalize; }
+
+        .cat-icon { width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 8px; }
 .cat-physical { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 11px solid #ef4444; }
 .cat-special { background-color: #3b82f6; border-radius: 50%; width: 11px; height: 11px; }
 .cat-status { border: 2px solid #94a3b8; border-radius: 50%; width: 10px; height: 10px; box-sizing: border-box; }
 
-.evo-stage-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.evo-item { 
-    text-align: center; 
-    text-transform: small-caps; 
-    cursor: pointer; 
-    padding: 5px; 
-    border-radius: 10px; 
+        .evo-item { 
+            text-align: center; 
+            text-transform: small-caps; 
+            cursor: pointer; 
+            padding: 5px; 
+            border-radius: 10px; 
+        }
+        .evo-img { width: 70px; height: 70px; }
+        #evoChain {
+    display: flex;
+    flex-direction: row;      /* Keep it horizontal */
+    justify-content: center;   /* THIS centers the boxes horizontally */
+    align-items: center;       /* Centers them vertically relative to each other */
+    gap: 0;                    /* We'll handle spacing in JS */
+    width: 100%;
+    margin: 0 auto;
+    overflow-x: auto;          /* Scrollable if too wide */
+    padding: 10px 0;
 }
-.evo-img { width: 70px; height: 70px; }
-#evoChain { display: flex; justify-content: center; align-items: center; min-height: 80px; text-align: center; }
 
-.list-item.active {
-    display: block !important;
-    width: 100% !important;
-    background-color: #64748b !important;
-    color: white !important;
-    padding: 15px 20px !important;
-    box-sizing: border-box !important;
-    border-radius: 8px !important;
+
+/* Ensure the columns inside also center their content */
+.evo-stage-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-body { font-family: sans-serif; background:#f0f0f0; }
-</style>
+        .list-item.active {
+            display: block !important;
+            width: 100% !important;
+            background-color: #64748b !important;
+            color: white !important;
+            padding: 15px 20px !important;
+            box-sizing: border-box !important;
+            border-radius: 8px !important;
+        }
+        #movesBody td {
+    font-variant: small-caps;
+    font-size: 14px; /* Optional: slightly larger font looks better with small-caps */
+    letter-spacing: 0.5px;
+}
+.form-btn {
+    background: white;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 50px; /* Pill shape */
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    text-transform: uppercase;
+}
+
+.form-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.form-btn.active {
+    background: #1e293b; /* Dark silver/slate for contrast */
+    color: white;
+    border-color: #1e293b;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+}
+
+/* Container styling for the variants section */
+#formsArea {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(226, 232, 240, 0.6) !important;
+}
+
+.version-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.ver-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid var(--silver-mid);
+    background: white;
+    color: var(--silver-dark);
+    transition: all 0.2s;
+}
+
+.ver-btn.scarlet { border-color: #ff2424; color: #ff2424; }
+.ver-btn.scarlet.active { background: #ff2424; color: white; }
+
+.ver-btn.violet { border-color: #8c47ff; color: #8c47ff; }
+.ver-btn.violet.active { background: #8c47ff; color: white; }
+
+#dex-entry-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #475569;
+    font-style: italic;
+    text-align: center;
+    padding: 0 20px;
+    min-height: 60px;
+}
+
+.creator-credit {
+    margin-top: 30px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: lowercase;
+    letter-spacing: 2px;
+    color: var(--silver-dark); /* Using your silver variable */
+    opacity: 0.6;
+    text-align: center;
+    border-top: 1px solid var(--silver-light);
+    padding-top: 15px;
+    width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+    </style>
 </head>
 <body>
 <div class="container">
@@ -114,9 +244,10 @@ body { font-family: sans-serif; background:#f0f0f0; }
                 <div class="search-wrapper">
                     <input type="text" id="pokeIn" class="nav-input" placeholder="Name or ID..." autocomplete="off">
                     <button class="search-btn" id="goBtn">GO</button>
-                    <div id="pokeSuggs" class="suggestions"></div>
+                    <div id="pokeSuggs" class="suggestions"></div>  <!-- Contenedor para sugerencias -->
                 </div>
             </div>
+            <div class="creator-credit">created by ξawsjake</div>
         </div>
     </div>
 
@@ -130,17 +261,17 @@ body { font-family: sans-serif; background:#f0f0f0; }
             <button class="back-btn" onclick="goBack()">← BACK</button>
             <div class="game-switcher">
                 <button id="btn-sv" 
-        class="game-btn active" 
-        style="background: linear-gradient(to right, var(--scarlet), var(--violet)); 
-               border-radius: 50px; 
-               border: none; 
-               padding: 10px 20px; 
-               color: white; 
-               cursor: pointer; 
-               font-weight: bold;" 
-        onclick="setGame('sv', this)">
-    S / V
-</button>
+                        class="game-btn active" 
+                        style="background: linear-gradient(to right, var(--scarlet), var(--violet)); 
+                        border-radius: 50px; 
+                        border: none; 
+                        padding: 10px 20px; 
+                        color: white; 
+                        cursor: pointer; 
+                        font-weight: bold;" 
+                        onclick="setGame('sv', this)">
+                        S / V
+                </button>
             </div>
             <button id="shinySparkle" class="shiny-btn" onclick="toggleShiny()">✨</button>
         </div>
@@ -188,397 +319,433 @@ body { font-family: sans-serif; background:#f0f0f0; }
     </div>
 </div>
 
-<div id="display-card"></div>
-
 <script>
-let allPokes = [], currentPoke = null, isShiny = false, activeVer = 'scarlet', activeGame = 'sv', moveMode = 'level-up', activeForm = null;
+    let allPokes = [], currentPoke = null, isShiny = false, activeVer = 'scarlet', activeGame = 'sv', moveMode = 'all';
+    const typeColors = { grass: '#7AC74C', fire: '#EE8130', water: '#6390F0', bug: '#A6B91A', normal: '#A8A77A', poison: '#A33EA1', electric: '#F7D02C', ground: '#E2BF65', fairy: '#D685AD', fighting: '#C22E28', psychic: '#F95587', rock: '#B6A136', ghost: '#735797', ice: '#96D9D6', dragon: '#6F35FC', dark: '#705746', steel: '#B7B7CE', flying: '#A98FF3' };
+    const cap = s => s.replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const typeColors = { 
-    grass: '#7AC74C', fire: '#EE8130', water: '#6390F0', bug: '#A6B91A', normal: '#A8A77A', poison: '#A33EA1', 
-    electric: '#F7D02C', ground: '#E2BF65', fairy: '#D685AD', fighting: '#C22E28', psychic: '#F95587', rock: '#B6A136', 
-    ghost: '#735797', ice: '#96D9D6', dragon: '#6F35FC', dark: '#705746', steel: '#B7B7CE', flying: '#A98FF3' 
-};
-
-const cap = s => s.replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
-
-function getStatColor(v) {
-    if(v < 50) return '#ff4d4d';
-    if(v < 80) return '#ff944d';
-    if(v < 100) return '#ffdb4d';
-    if(v < 120) return '#52be80';
-    if(v < 150) return '#5dade2';
-    return '#af7ac5';
-}
-
-window.onload = async () => {
-    const data = await (await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1025')).json();
-    allPokes = data.results.map((p, i) => ({ name: p.name, id: i + 1 }));
-    setupSearch('pokeIn', 'pokeSuggs', allPokes, loadPokemon);
-};
-
-function goBack() {
-    document.getElementById('display-card').style.display = 'none';
-    document.getElementById('search-section').style.display = 'flex';
-    document.body.className = '';
-    window.scrollTo(0,0);
-}
-
-function setupSearch(id, sugId, list, cb) {
-    const inp = document.getElementById(id),
-          sug = document.getElementById(sugId),
-          goBtn = document.getElementById('goBtn');
-    let currentFocus = -1;
-
-    const processSearch = () => {
-        const val = inp.value.toLowerCase().trim();
-        if(val) { cb(val); closeSuggs(); }
-    };
-
-    goBtn.onclick = processSearch;
-
-    inp.oninput = () => {
-        const val = inp.value.toLowerCase();
-        sug.innerHTML = "";
-        currentFocus = -1;
-        if(!val) { sug.style.display = "none"; return; }
-
-        const matches = list.filter(p => p.name.includes(val) || (p.id && p.id.toString() === val)).slice(0,10);
-        sug.style.display = matches.length ? "block" : "none";
-
-        matches.forEach((m) => {
-            const d = document.createElement('div');
-            d.className = "list-item";
-            d.innerHTML = `<span class="search-id" style="color:#94a3b8; font-weight:bold; margin-right:10px;">#${m.id}</span>${cap(m.name)}`;
-            d.addEventListener("click", () => { cb(m.name); closeSuggs(); });
-            sug.appendChild(d);
-        });
-
-        const items = sug.getElementsByClassName("list-item");
-        if(items.length) {
-            currentFocus = 0;
-            addActive(items);
-        }
-    };
-
-    inp.onkeydown = (e) => {
-        const items = sug.getElementsByClassName("list-item");
-        if(!items.length) return;
-
-        if(e.key === "ArrowDown") {
-            currentFocus++;
-            if(currentFocus >= items.length) currentFocus = 0;
-            addActive(items);
-            e.preventDefault();
-        } else if(e.key === "ArrowUp") {
-            currentFocus--;
-            if(currentFocus < 0) currentFocus = items.length - 1;
-            addActive(items);
-            e.preventDefault();
-        } else if(e.key === "Enter") {
-            e.preventDefault();
-            if(currentFocus > -1 && items[currentFocus]) {
-                const name = items[currentFocus].textContent.replace(/^#\d+\s*/, '').toLowerCase();
-                cb(name);
-                closeSuggs();
-            } else {
-                processSearch();
-            }
-        }
-    };
-
-    function addActive(items) {
-        Array.from(items).forEach(i => i.classList.remove("active"));
-        if(currentFocus >= 0 && currentFocus < items.length) {
-            items[currentFocus].classList.add("active");
-            items[currentFocus].scrollIntoView({ block: "nearest" });
-        }
+    function getStatColor(v) {
+        if(v < 50) return '#ff4d4d'; if(v < 80) return '#ff944d'; if(v < 100) return '#ffdb4d';
+        if(v < 120) return '#52be80'; if(v < 150) return '#5dade2'; return '#af7ac5';
     }
 
-    function closeSuggs() {
-        sug.style.display = "none";
-        document.getElementById('search-section').style.display = 'none';
-        inp.value = "";
-        document.getElementById('display-card').style.display = 'block';
-    }
-}
+    window.onload = async () => {
+        const data = await (await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1025')).json();
+        allPokes = data.results.map((p, i) => ({ name: p.name, id: i + 1 }));
+        setupSearch('pokeIn', 'pokeSuggs', allPokes, loadPokemon);
+    };
 
-async function loadPokemon(idOrName) {
-    try {
-        // Carga la forma específica
-        const poke = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName}`)).json();
-
-        // Carga la especie y evolución
-        const species = await (await fetch(poke.species.url)).json();
-        const evo = await (await fetch(species.evolution_chain.url)).json();
-
-        currentPoke = { species, poke, evo };
-
-        document.getElementById('display-card').style.display = 'block';
-        render(); // pinta todo
+    function goBack() {
+        document.getElementById('display-card').style.display = 'none';
+        document.getElementById('search-section').style.display = 'flex';
+        document.body.className = '';
         window.scrollTo(0,0);
-    } catch(e) {
-        alert("Error loading Pokémon. Please try again.");
     }
-}
 
-
-const statMap = {
-    hp: 'HP',
-    attack: 'ATK',
-    defense: 'DEF',
-    'special-attack': 'SPA',
-    'special-defense': 'SPD',
-    speed: 'SPE'
-};
-
-async function render() {
-    const { species, poke, evo } = currentPoke;
-    document.getElementById('pokeName').innerText = cap(poke.name);
-    document.getElementById('dexNumber').innerText = `#${species.id.toString().padStart(4, '0')}`;
-    document.getElementById('pokeImg').src = isShiny 
-        ? (poke.sprites.other.home.front_shiny || poke.sprites.front_shiny) 
-        : (poke.sprites.other.home.front_default || poke.sprites.front_default);
-    document.getElementById('pokeTypes').innerHTML = poke.types.map(t => `<span class="type-badge" style="background:${typeColors[t.type.name]}">${t.type.name}</span>`).join('');
-    document.getElementById('pCat').innerText = species.genera.find(g => g.language.name==='en')?.genus || "";
-
-    let stats = "";
-    poke.stats.forEach(s => {
-        stats += `<div class="stat-row">
-                    <div style="width:35px">${statMap[s.stat.name]}</div>
-                    <div style="width:35px; text-align:right">${s.base_stat}</div>
-                    <div class="stat-bar-bg">
-                        <div class="stat-bar-fill" style="width:${(s.base_stat/255)*100}%; background:${getStatColor(s.base_stat)}"></div>
-                    </div>
-                  </div>`;
-    });
-    document.getElementById('stats-area').innerHTML = stats;
-
-    let absHtml = "";
-    for(let a of poke.abilities) {
-        const d = await (await fetch(a.ability.url)).json();
-        const entry = d.effect_entries.find(e => e.language.name==='en');
-        absHtml += `<div style="margin-bottom:12px">
-                        <strong>${cap(a.ability.name).toUpperCase()}</strong>${a.is_hidden ? ' (HA)' : ''}: 
-                        <span style="color:#64748b">${entry ? entry.short_effect : "No info."}</span>
-                    </div>`;
-    }
-    document.getElementById('abilitiesArea').innerHTML = absHtml;
-
-    renderEvoChain(evo.chain);
-    renderForms(species.varieties);
-    updateEntry();
-    renderMoves();
-}
-
-const verColors = {
-    'scarlet': 'var(--scarlet)',
-    'violet': 'var(--violet)',
-    'sword': 'cyan',
-    'shield': 'magenta',
-    'legends-arceus': '#FFD700'
-};
-
-async function renderEvoChain(chain) {
-    const container = document.getElementById('evoChain');
-    container.innerHTML = "";
-
-    async function createNode(node) {
-        const speciesData = await (await fetch(node.species.url)).json();
-
-        // Todas las variedades de esta especie
-        const speciesVarieties = await Promise.all(speciesData.varieties.map(async v => {
-            const pokeData = await (await fetch(v.pokemon.url)).json();
-            const spriteUrl = isShiny
-                ? (pokeData.sprites.other.home.front_shiny || pokeData.sprites.front_shiny)
-                : (pokeData.sprites.other.home.front_default || pokeData.sprites.front_default);
-            return { name: pokeData.name, sprite: spriteUrl };
-        }));
-
-        // Nodo principal vertical
-        const nodeDiv = document.createElement('div');
-        nodeDiv.style.display = 'flex';
-        nodeDiv.style.flexDirection = 'column';
-        nodeDiv.style.alignItems = 'center';
-        nodeDiv.style.margin = '0 10px';
-
-        // Añadimos todas las variedades de la especie
-        const speciesDiv = document.createElement('div');
-        speciesDiv.style.display = 'flex';
-        speciesDiv.style.flexWrap = 'wrap';  // permite varias filas si hay muchos
-        speciesDiv.style.justifyContent = 'center';
-        speciesDiv.style.gap = '8px';
-        speciesDiv.style.maxWidth = '200px'; // evita descuadre en evoluciones largas
-
-        speciesVarieties.forEach(s => {
-            const evoItem = document.createElement('div');
-            evoItem.className = 'evo-item';
-            evoItem.style.textAlign = 'center';
-            evoItem.style.cursor = 'pointer';
-            evoItem.onclick = () => loadPokemon(s.name);
-            evoItem.innerHTML = `
-                <img src="${s.sprite}" class="evo-img" style="width:50px; height:50px; border:1px solid #000; border-radius:6px;">
-                <div style="font-size:10px; font-weight:900; text-transform:capitalize;">${s.name.replace(/-/g,' ')}</div>
-            `;
-            speciesDiv.appendChild(evoItem);
-        });
-
-        nodeDiv.appendChild(speciesDiv);
-
-        // Si hay evoluciones, las ponemos debajo con una flecha
-        if(node.evolves_to && node.evolves_to.length) {
-            const arrowDiv = document.createElement('div');
-            arrowDiv.innerHTML = '<span style="font-weight:bold; color:#cbd5e1; font-size:14px;">↓</span>';
-            arrowDiv.style.margin = '4px 0';
-            nodeDiv.appendChild(arrowDiv);
-
-            // Contenedor horizontal para evoluciones
-            const evolutionsDiv = document.createElement('div');
-            evolutionsDiv.style.display = 'flex';
-            evolutionsDiv.style.flexWrap = 'wrap'; // permite varias filas
-            evolutionsDiv.style.justifyContent = 'center';
-            evolutionsDiv.style.gap = '10px';
-            evolutionsDiv.style.maxWidth = '400px'; // ajusta según necesidad
-
-            for(let evoBranch of node.evolves_to) {
-                const childNode = await createNode(evoBranch);
-                evolutionsDiv.appendChild(childNode);
+    // --- REPAIRED LOAD FUNCTION ---
+    async function loadPokemon(name) {
+        try {
+            // First try to get basic data to find the species
+            let pokeData, speciesData;
+            
+            try {
+                // Try fetching as a specific variety/form first
+                pokeData = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`)).json();
+                speciesData = await (await fetch(pokeData.species.url)).json();
+            } catch (e) {
+                // If that fails, try fetching as a species (default form)
+                speciesData = await (await fetch(`https://pokeapi.co/api/v2/pokemon-species/${name.toLowerCase()}`)).json();
+                const defaultUrl = speciesData.varieties.find(v => v.is_default).pokemon.url;
+                pokeData = await (await fetch(defaultUrl)).json();
             }
 
-            nodeDiv.appendChild(evolutionsDiv);
+            const evoData = await (await fetch(speciesData.evolution_chain.url)).json();
+
+            currentPoke = { species: speciesData, poke: pokeData, evo: evoData };
+            
+            document.getElementById('search-section').style.display = 'none';
+            document.getElementById('display-card').style.display = 'block';
+            
+            render();
+            window.scrollTo(0, 0);
+        } catch (err) {
+            console.error(err);
+            alert("Pokémon or Form not found!");
+        }
+    }
+
+    async function render() {
+        const { species, poke, evo } = currentPoke;
+        document.getElementById('pokeName').innerText = cap(poke.name);
+        document.getElementById('dexNumber').innerText = `#${species.id.toString().padStart(4, '0')}`;
+        
+        // Handle Shiny Toggle
+        document.getElementById('pokeImg').src = isShiny ? 
+            (poke.sprites.other.home.front_shiny || poke.sprites.front_shiny) : 
+            (poke.sprites.other.home.front_default || poke.sprites.front_default);
+
+        document.getElementById('pokeTypes').innerHTML = poke.types.map(t => `<span class="type-badge" style="background:${typeColors[t.type.name]}">${t.type.name}</span>`).join('');
+        document.getElementById('pCat').innerText = species.genera.find(g => g.language.name==='en')?.genus || "";
+        
+        // Render Stats (The fix for dynamic stats is here)
+        let statsHtml = "";
+        poke.stats.forEach(s => {
+            const shortName = s.stat.name.replace('special-', 'S').substring(0,3).toUpperCase();
+            statsHtml += `<div class="stat-row">
+                <div style="width:35px">${shortName}</div>
+                <div style="width:35px; text-align:right">${s.base_stat}</div>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(s.base_stat/255)*100}%; background:${getStatColor(s.base_stat)}"></div></div>
+            </div>`;
+        });
+        document.getElementById('stats-area').innerHTML = statsHtml;
+
+       // Render Abilities
+let absHtml = "";
+
+// 1. Filter out duplicates based on the ability name
+const uniqueAbilities = poke.abilities.filter((ability, index, self) =>
+    index === self.findIndex((a) => a.ability.name === ability.ability.name)
+);
+
+for(let a of uniqueAbilities) {
+    // 2. Only show (HA) badge if there's more than one UNIQUE ability
+    const showHA = a.is_hidden && uniqueAbilities.length > 1;
+    
+    const d = await (await fetch(a.ability.url)).json();
+    const entry = d.effect_entries.find(e => e.language.name === 'en');
+    
+    absHtml += `
+        <div style="margin-bottom:12px; font-size: 13px; line-height: 1.4;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                <strong style="color: #1e293b; letter-spacing: 0.5px;">
+                    ${cap(a.ability.name).toUpperCase()}
+                </strong>
+                ${showHA ? `<span style="font-size: 9px; font-weight: 800; color: var(--silver-dark); background: var(--silver-light); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--silver-mid);">HA</span>` : ''}
+            </div>
+            <div style="color: #64748b; font-size: 12px;">
+                ${entry ? entry.short_effect : "No info available."}
+            </div>
+        </div>`;
+}
+document.getElementById('abilitiesArea').innerHTML = absHtml;
+
+        renderEvoChain(evo.chain);
+        renderFormsList();
+        renderMoves();
+    }
+
+    function renderFormsList() {
+        const varieties = currentPoke.species.varieties;
+        const area = document.getElementById('formsArea');
+        const list = document.getElementById('formsList');
+
+        if (varieties.length <= 1) {
+            area.style.display = 'none';
+            return;
         }
 
-        return nodeDiv;
+        area.style.display = 'block';
+        list.innerHTML = varieties.map(v => {
+            const isCurrent = v.pokemon.name === currentPoke.poke.name;
+            const label = v.is_default ? 'BASE' : v.pokemon.name.replace(currentPoke.species.name + '-', '').toUpperCase();
+            return `<button class="form-btn ${isCurrent ? 'active' : ''}" onclick="loadForm('${v.pokemon.name}')">${label}</button>`;
+        }).join('');
     }
 
-    const rootNode = await createNode(chain);
-    container.appendChild(rootNode);
-
-    if(container.innerHTML.trim() === "") {
-        container.innerHTML = `<div style="color:#64748b; font-weight:900; font-size:12px; text-align:center;">Doesn't evolve</div>`;
+    async function loadForm(variantName) {
+        const pokeData = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${variantName}`)).json();
+        currentPoke.poke = pokeData;
+        render(); // This ensures stats and images refresh
     }
-}
 
+    // --- SEARCH LOGIC ---
+    function setupSearch(id, sugId, list, cb) {
+        const inp = document.getElementById(id), sug = document.getElementById(sugId), goBtn = document.getElementById('goBtn');
+        inp.oninput = () => {
+            const val = inp.value.toLowerCase();
+            sug.innerHTML = "";
+            if(!val) { sug.style.display = "none"; return; }
+            const matches = list.filter(p => p.name.includes(val) || p.id.toString() === val).slice(0, 10);
+            sug.style.display = matches.length ? "block" : "none";
+            matches.forEach(m => {
+                const d = document.createElement('div');
+                d.className = "list-item";
+                d.innerHTML = `<span style="color:#94a3b8; font-weight:bold; margin-right:10px;">#${m.id}</span>${cap(m.name)}`;
+                d.onclick = () => { cb(m.name); sug.style.display="none"; inp.value=""; };
+                sug.appendChild(d);
+            });
+        };
+        goBtn.onclick = () => { if(inp.value) cb(inp.value); };
+    }
 
-function renderForms() {
-    const forms = currentPoke.species.varieties;
-    const area = document.getElementById('formsArea');
-    const list = document.getElementById('formsList');
+    function toggleShiny() {
+        isShiny = !isShiny;
+        document.getElementById('shinySparkle').classList.toggle('active');
+        render();
+    }
 
-    if (forms.length <= 1) {
-        area.style.display = 'none';
+    // --- Placeholder for other functions to keep code running ---
+    function setGame(g, btn) { activeGame = g; render(); }
+    function setMoveMode(mode, btn) {
+        moveMode = mode;
+        // Update active class on buttons
+        document.querySelectorAll('.v-toggle').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderMoves();
+    }
+    async function renderMoves() {
+    const body = document.getElementById('movesBody');
+    if (!currentPoke || !currentPoke.poke) return;
+    
+    body.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Loading moves...</td></tr>";
+
+    const poke = currentPoke.poke;
+    const vGroup = activeGame === 'sv' ? 'scarlet-violet' : 'sword-shield';
+
+    // 1. Filter moves based on the selected mode
+    let movesList = poke.moves.filter(m => {
+        return m.version_group_details.some(v => {
+            const matchVersion = v.version_group.name === vGroup;
+            const matchMethod = (moveMode === 'all' || v.move_learn_method.name === moveMode);
+            return matchVersion && matchMethod;
+        });
+    });
+
+    // 2. Sort
+    if (moveMode === 'level-up' || moveMode === 'all') {
+        movesList.sort((a, b) => {
+            const aDet = a.version_group_details.find(v => v.version_group.name === vGroup && v.move_learn_method.name === 'level-up');
+            const bDet = b.version_group_details.find(v => v.version_group.name === vGroup && v.move_learn_method.name === 'level-up');
+            return (aDet?.level_learned_at || 0) - (bDet?.level_learned_at || 0);
+        });
+    }
+
+    if (movesList.length === 0) {
+        body.innerHTML = `<tr><td colspan='4' style='text-align:center; padding:20px;'>No moves found.</td></tr>`;
         return;
     }
 
-    area.style.display = 'block';
-    list.innerHTML = '';
+    let html = "";
+    try {
+        const movePromises = movesList.slice(0, 80).map(async (m) => {
+            const res = await fetch(m.move.url);
+            const data = await res.json();
+            
+            // FIND THE SPECIFIC DETAIL FOR THE CURRENT MODE
+            // If mode is 'all', we look for level-up first to show the number
+            let detail;
+            if (moveMode === 'all') {
+                detail = m.version_group_details.find(v => v.version_group.name === vGroup && v.move_learn_method.name === 'level-up') 
+                         || m.version_group_details.find(v => v.version_group.name === vGroup);
+            } else {
+                detail = m.version_group_details.find(v => v.version_group.name === vGroup && v.move_learn_method.name === moveMode);
+            }
 
-    forms.forEach(f => {
-        const btn = document.createElement('button');
-        btn.className = 'form-btn';
+            // FORCE DASH FOR TM AND EGG MODES
+            let displayLvl = '—';
+            if (detail && detail.move_learn_method.name === 'level-up') {
+                displayLvl = detail.level_learned_at;
+            }
+            // Additional safety: if user clicked 'machine', force it to dash
+            if (moveMode === 'machine' || moveMode === 'egg') {
+                displayLvl = '—';
+            }
 
-        let label;
-        if (f.is_default) {
-            label = 'BASE';
-        } else {
-            label = f.pokemon.name
-                .replace(currentPoke.species.name + '-', '')
-                .replace(/-/g, ' ')
-                .toUpperCase();
-        }
+            return {
+                lvl: displayLvl,
+                name: m.move.name,
+                type: data.type.name,
+                power: data.power || '—',
+                category: data.damage_class.name
+            };
+        });
 
-        btn.textContent = label;
+        const moveDataResults = await Promise.all(movePromises);
 
-        if (f.pokemon.name === currentPoke.poke.name) {
-            btn.classList.add('active');
-        }
+        moveDataResults.forEach(m => {
+            if (!m) return;
+            const catIcon = `<span class="cat-icon cat-${m.category}"></span>`;
+            html += `
+                <tr>
+                    <td style="font-weight:bold; color:#64748b; text-align:center; width:40px;">${m.lvl}</td>
+                    <td style="font-weight:bold; font-variant: small-caps; font-size: 14px;">
+                        ${catIcon}${m.name.replace(/-/g, ' ')}
+                    </td>
+                    <td style="width:80px;">
+                        <span class="type-badge" style="background:${typeColors[m.type]}; margin:0; font-size:9px; display:block; text-align:center;">
+                            ${m.type}
+                        </span>
+                    </td>
+                    <td style="font-weight:bold; text-align:center; width:40px;">${m.power}</td>
+                </tr>`;
+        });
 
-        btn.onclick = () => loadPokemon(f.pokemon.name);
-        list.appendChild(btn);
+        body.innerHTML = html;
+    } catch (err) {
+        body.innerHTML = "<tr><td colspan='4'>Error loading moves.</td></tr>";
+    }
+}
+
+    // Generar las filas de la tabla con los movimientos
+    const movesBody = document.getElementById('movesBody');
+    movesBody.innerHTML = ''; // Limpiar cualquier contenido anterior
+
+    movesList.forEach(m => {
+        const moveDetails = m.move;
+        const moveType = moveDetails.type.name; // Tipo del movimiento
+        const movePower = moveDetails.power || '-'; // Poder del movimiento (si existe)
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${m.version_group_details[0].level_learned_at || '-'}</td>
+            <td>${cap(moveDetails.name)}</td>
+            <td><span class="type-badge" style="background:${typeColors[moveType]}">${moveType}</span></td>
+            <td>${movePower}</td>
+        `;
+        movesBody.appendChild(row);
     });
-}
+    async function renderEvoChain(chain) {
+    const container = document.getElementById('evoChain');
+    container.innerHTML = ""; 
 
-async function loadForm(name) {
-    currentPoke.poke = await (await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)).json();
-    render();
-}
+    // Main entry point
+    await renderBranch(chain, container);
 
-function setGame(g, btn) {
-    activeGame = g; 
-    document.body.className = `theme-${g}`;
-    document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active')); 
-    btn.classList.add('active');
-    activeVer = g === 'sv' ? 'scarlet' : g === 'ss' ? 'sword' : 'legends-arceus';
-    updateEntry(); 
-    renderMoves();
-}
-
-
-async function renderMoves() {
-    const body = document.getElementById('movesBody');
-    body.innerHTML = "<tr><td colspan='4'>Loading moves...</td></tr>";
-
-    const vGroup = activeGame === 'sv' ? 'scarlet-violet' 
-                 : activeGame === 'ss' ? 'sword-shield' 
-                 : 'legends-arceus';
-
-    let moves = currentPoke.poke.moves.filter(m => 
-        m.version_group_details.some(d => d.version_group.name === vGroup 
-            && (moveMode === 'all' || d.move_learn_method.name === moveMode))
+   async function renderBranch(stage, targetContainer) {
+    const column = document.createElement('div');
+    column.style.cssText = "display: flex; flex-direction: column; align-items: center; gap: 10px;";
+    
+    // 1. Fetch species data for variants
+    const speciesRes = await fetch(stage.species.url);
+    const speciesData = await speciesRes.json();
+    const forms = speciesData.varieties.filter(v => 
+        v.pokemon.name.includes('-alola') || v.pokemon.name.includes('-galar') || 
+        v.pokemon.name.includes('-hisui') || v.pokemon.name.includes('-paldea') || v.is_default
     );
 
-    if(moveMode === 'level-up' || moveMode === 'all') {
-        moves.sort((a,b) => {
-            const aDetail = a.version_group_details.find(d => d.version_group.name === vGroup);
-            const bDetail = b.version_group_details.find(d => d.version_group.name === vGroup);
-            const aLevel = aDetail.move_learn_method.name === 'level-up' ? aDetail.level_learned_at : Infinity;
-            const bLevel = bDetail.move_learn_method.name === 'level-up' ? bDetail.level_learned_at : Infinity;
-            return aLevel - bLevel;
-        });
-    }
-
-    const moveData = [];
-    const seenMoves = new Set();
-
-    for(const m of moves) {
-        const d = await (await fetch(m.move.url)).json();
-        const detail = m.version_group_details.find(v => v.version_group.name === vGroup);
-        const moveKey = m.move.name + '-' + detail.move_learn_method.name;
-        if(seenMoves.has(moveKey)) continue;
-        seenMoves.add(moveKey);
-
-        let lvlText = '-';
-        if(moveMode === 'level-up' && detail.move_learn_method.name === 'level-up') {
-            lvlText = detail.level_learned_at || '-';
+    const formsBox = document.createElement('div');
+    formsBox.style.cssText = "display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 80px;";
+    
+    forms.forEach((form, idx) => {
+        if (!form.is_default && idx > 0) {
+            const line = document.createElement('div');
+            line.style.cssText = "width: 30px; height: 1px; background: #e2e8f0; margin: 2px 0;";
+            formsBox.appendChild(line);
         }
+        const isCurrent = form.pokemon.name === currentPoke.poke.name;
+        const formId = form.pokemon.url.split('/').slice(-2, -1)[0];
+        const name = form.is_default ? stage.species.name : form.pokemon.name.split('-')[1];
+        
+        formsBox.innerHTML += `
+            <div onclick="loadPokemon('${form.pokemon.name}')" style="cursor:pointer; text-align:center; padding:5px; width:100%; ${isCurrent ? 'background:#e2e8f0; border-radius:12px; border:2px solid var(--accent);' : ''}">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${formId}.png" style="width:50px;">
+                <div style="font-weight:900; font-size:8px;">${name.toUpperCase()}</div>
+            </div>`;
+    });
 
-        moveData.push(`<tr>
-            <td>${lvlText}</td>
-            <td><span class="cat-icon cat-${d.damage_class.name}"></span>${cap(d.name)}</td>
-            <td><span class="type-badge" style="background:${typeColors[d.type.name]}; padding: 3px 6px; font-size:9px;">${d.type.name}</span></td>
-            <td>${d.power || '-'}</td>
-        </tr>`);
+    column.appendChild(formsBox);
+    targetContainer.appendChild(column);
+
+    // 2. Handle Branching: Each path gets its own arrow and label
+    if (stage.evolves_to.length > 0) {
+        const branchWrapper = document.createElement('div');
+        branchWrapper.style.cssText = "display: flex; flex-direction: column; gap: 15px; justify-content: center;";
+        targetContainer.appendChild(branchWrapper);
+        
+        for (const next of stage.evolves_to) {
+            const pathContainer = document.createElement('div');
+            pathContainer.style.cssText = "display: flex; align-items: center;";
+            branchWrapper.appendChild(pathContainer);
+
+            // Create specific connector for THIS branch
+            // Inside your branch loop...
+const details = next.evolution_details[0];
+let methodText = "LEVEL UP"; 
+
+if (details) {
+    const parts = [];
+    
+    // 1. REMAP LOCATIONS TO STONES (Modern standard)
+   if (details.location) {
+    const loc = details.location.name.toLowerCase();
+
+    // 1. LEAF STONE / MOSS ROCK LOCATIONS
+    if (loc.includes('moss') || loc.includes('eterna-forest') || loc.includes('pinwheel-forest') || loc.includes('petalburg-woods')) {
+        parts.push("LEAF STONE");
+    } 
+    // 2. ICE STONE / ICY ROCK LOCATIONS
+    else if (loc.includes('sinnoh') || loc.includes('frost') || loc.includes('lanakila') || loc.includes('twist-mountain')) {
+        parts.push("ICE STONE");
+    } 
+    // 3. THUNDER STONE / MAGNETIC FIELD LOCATIONS
+    else if (loc.includes('magnetic') || loc.includes('coronet') || loc.includes('chargestone') || loc.includes('mauville') || loc.includes('kalos-route-13')) {
+        parts.push("THUNDER STONE");
+    } 
+    // 4. FALLBACK (for any unique locations not covered by stones)
+    else {
+        parts.push(`AT ${details.location.name.replace(/-/g, ' ').toUpperCase()}`);
+    }
+}
+// 1. Fairy-type move check (Sylveon)
+if (details.known_move_type) {
+    const typeName = details.known_move_type.name.toUpperCase();
+    parts.push(`KNOWS ${typeName} MOVE`);
+}
+
+// 2. Friendship/Affection check (Sylveon + others)
+if (details.min_happiness || details.min_affection) {
+    let friendStr = "FRIENDSHIP";
+    
+    // Add time of day if specific (Espeon/Umbreon)
+    if (details.time_of_day) {
+        friendStr += ` (${details.time_of_day.toUpperCase()})`;
+    }
+    
+    parts.push(friendStr);
+}
+    // 2. Standard Stone/Item Trigger
+    if (details.item) {
+        parts.push(details.item.name.replace(/-/g, ' ').toUpperCase());
     }
 
-    body.innerHTML = moveData.join('') || "<tr><td colspan='4'>No moves found.</td></tr>";
+    // 3. Friendship & Time
+    if (details.min_happiness) {
+        let friendStr = "FRIENDSHIP";
+        if (details.time_of_day) friendStr += ` (${details.time_of_day.toUpperCase()})`;
+        parts.push(friendStr);
+    }
+
+    // 4. Standard Triggers
+    if (details.min_level) parts.push(`LVL ${details.min_level}`);
+    if (details.trigger.name === 'trade') parts.push("TRADE");
+    if (details.held_item) parts.push(`HOLD ${details.held_item.name.replace(/-/g, ' ').toUpperCase()}`);
+    if (details.known_move) parts.push(`MOVE: ${details.known_move.name.toUpperCase()}`);
+    
+    // 5. Cleanup and deduplicate
+    const uniqueParts = [...new Set(parts)];
+    
+    // Final check: If a location was remapped to a stone that was already there, 
+    // Set() ensures it only shows once.
+    methodText = uniqueParts.length > 0 ? uniqueParts.join(' + ') : details.trigger.name.replace(/-/g, ' ').toUpperCase();
 }
 
-
-function setMoveMode(m, btn) { 
-    moveMode = m; 
-    document.querySelectorAll('.v-toggle').forEach(b => b.classList.remove('active')); 
-    btn.classList.add('active'); 
-    renderMoves(); 
+// UI Connector
+const connector = document.createElement('div');
+connector.style.cssText = "display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 85px; padding: 0 5px;";
+connector.innerHTML = `
+    <span style="font-size: 7px; font-weight: 900; color: var(--silver-dark); margin-bottom: -4px; text-align: center; line-height: 1.1;">
+        ${methodText}
+    </span>
+    <span style="color: #cbd5e1; font-size: 20px;">→</span>
+`;
+            
+            pathContainer.appendChild(connector);
+            await renderBranch(next, pathContainer);
+        }
+    }
+}
 }
 
-function toggleShiny() { 
-    isShiny = !isShiny; 
-    document.getElementById('shinySparkle').classList.toggle('active', isShiny); 
-    render(); 
-}
-
-
-console.log('JS cargado');
 </script>
 </body>
-
 </html>
