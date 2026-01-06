@@ -464,9 +464,7 @@ function renderForms() {
     const area = document.getElementById('formsArea');
     const list = document.getElementById('formsList');
 
-    const baseForms = forms.filter(f => f.is_default || isSpecialVariety(f.pokemon.name));
-
-    if(forms.length <= 1) {
+    if (forms.length <= 1) {
         area.style.display = 'none';
         return;
     }
@@ -476,20 +474,27 @@ function renderForms() {
 
     forms.forEach(f => {
         const btn = document.createElement('button');
-        btn.classList.add('form-btn');
+        btn.className = 'form-btn';
 
-        let text = f.is_default ? 'Base' : f.pokemon.name.replace(currentPoke.species.name + '-', '').replace(/-/g,' ').toUpperCase();
-        btn.textContent = text;
+        let label;
+        if (f.is_default) {
+            label = 'BASE';
+        } else {
+            label = f.pokemon.name
+                .replace(currentPoke.species.name + '-', '')
+                .replace(/-/g, ' ')
+                .toUpperCase();
+        }
 
-        if(f.pokemon.name === currentPoke.poke.name) btn.classList.add('active');
+        btn.textContent = label;
+
+        if (f.pokemon.name === currentPoke.poke.name) {
+            btn.classList.add('active');
+        }
+
         btn.onclick = () => loadPokemon(f.pokemon.name);
         list.appendChild(btn);
     });
-}
-
-function isSpecialVariety(name) {
-    const special = ['tauros', 'darmanitan']; 
-    return special.some(p => name.startsWith(p));
 }
 
 async function loadForm(name) {
@@ -575,4 +580,5 @@ function toggleShiny() {
 console.log('JS cargado');
 </script>
 </body>
+
 </html>
